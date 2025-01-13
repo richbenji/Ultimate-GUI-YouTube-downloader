@@ -1,5 +1,5 @@
-#Environnement virtuel Python
+# Environnement virtuel Python
 /venv/
 
-# PyCharm
+# Ignorer les fichiers de configuration IDE (comme PyCharm)
 .idea/
