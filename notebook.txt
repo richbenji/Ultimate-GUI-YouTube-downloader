@@ -1,0 +1,18 @@
+# Afficher les vidéos disponibles adaptatives (vidéos seules sans audio) au format .mp4, à une résolution spécifique (1080p)
+yt.streams.filter(adaptive=True, file_extension='mp4', res="1080p")
+
+# Afficher que les fichiers audios
+yt.streams.filter(only_audio=True)
+
+# En fait voilà ce que je vais vouloir faire :
+1. Choisir la résolution parmi les résolutions disponibles. Donc je vais vouloir un menu déroulant qui m'affiche les résolution disponibles. On utilisera par défaut seulement le format .mp4.
+2. Si la vidéo est disponible en format progressif avec son et image au format que je veux, alors il télécharge la vidéo.
+3. Sinon, si l'audio et la vidéo sont séparées (format "adaptative"), alors il télécharge séparément la vidéo à la résolution désirés ainsi que l'audio.
+4. On fusionne ensuite avec ffmpeg les fichiers audio et vidéo et on supprime les fichiers originaux pour ne garder que les fusionnés.
+
+Il faut que à côté du lien, on puisse choisir le format (mp4 ou webm) et la résolution parmi ceux disponibles. Faire comme sur Notube avec 1 seul bouton qui propose les 2 possibiltés d'un coup (ex. mp4 1080p).
+
+# Faire en sorte qu'on puisse lui fournir une liste de liens, et on demande le format directement. Si le format est indisponible, il nous proposera les autres formats possibles.
+/!\ Modifier : demander avant à l'utilisateur le format (mp4 ou webm) et la résolution
+
+# Faire télécharger une play-list pour les mp3
