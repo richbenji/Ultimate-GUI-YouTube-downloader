@@ -1,18 +1,40 @@
-# Afficher les vidéos disponibles adaptatives (vidéos seules sans audio) au format .mp4, à une résolution spécifique (1080p)
-yt.streams.filter(adaptive=True, file_extension='mp4', res="1080p")
+from pytubfix import apply_fix
+from pytube import YouTube
+import os
+import subprocess
 
-# Afficher que les fichiers audios
-yt.streams.filter(only_audio=True)
+# Appliquer les correctifs à Pytube
+apply_fix()
 
-# En fait voilà ce que je vais vouloir faire :
-1. Choisir la résolution parmi les résolutions disponibles. Donc je vais vouloir un menu déroulant qui m'affiche les résolution disponibles. On utilisera par défaut seulement le format .mp4.
-2. Si la vidéo est disponible en format progressif avec son et image au format que je veux, alors il télécharge la vidéo.
-3. Sinon, si l'audio et la vidéo sont séparées (format "adaptative"), alors il télécharge séparément la vidéo à la résolution désirés ainsi que l'audio.
-4. On fusionne ensuite avec ffmpeg les fichiers audio et vidéo et on supprime les fichiers originaux pour ne garder que les fusionnés.
+class YouTubeDownloader:
+    def __init__(self, output_dir="downloads/"):
+        self.output_dir = output_dir
+        if not os.path.exists(self.output_dir):
+            os.makedirs(self.output_dir)
 
-Il faut que à côté du lien, on puisse choisir le format (mp4 ou webm) et la résolution parmi ceux disponibles. Faire comme sur Notube avec 1 seul bouton qui propose les 2 possibiltés d'un coup (ex. mp4 1080p).
+    def get_streams(self, video_url):
+        """Récupère les streams disponibles pour une vidéo."""
+        yt = YouTube(video_url)
+        streams = yt.streams
+        return [
+            {"itag": stream.itag, "type": stream.mime_type, "res": stream.resolution, "abr": stream.abr}
+            for stream in streams
+        ]
 
-# Faire en sorte qu'on puisse lui fournir une liste de liens, et on demande le format directement. Si le format est indisponible, il nous proposera les autres formats possibles.
-/!\ Modifier : demander avant à l'utilisateur le format (mp4 ou webm) et la résolution
+    def download_stream(self, video_url, itag):
+        """Télécharge un flux vidéo ou audio."""
+        yt = YouTube(video_url)
+        stream = yt.streams.get_by_itag(itag)
+        filepath = stream.download(output_path=self.output_dir)
+        return filepath
 
-# Faire télécharger une play-list pour les mp3
+    def merge_audio_video(self, video_file, audio_file, output_file):
+        """Fusionne les fichiers audio et vidéo avec FFmpeg."""
+        command = [
+            "ffmpeg", "-y", "-i", video_file, "-i", audio_file,
+            "-c:v", "copy", "-c:a", "aac", output_file
+        ]
+        subprocess.run(command)
+        os.remove(video_file)
+        os.remove(audio_file)
+        return output_file
