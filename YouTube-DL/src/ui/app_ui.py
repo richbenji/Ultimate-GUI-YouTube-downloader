@@ -3,7 +3,8 @@ from PIL import Image
 from customtkinter import CTkImage
 from tkinter import filedialog
 from src.config import Config
-from src.downloader.youtube_downloader import fetch_resolutions, download_and_merge, show_progress, YouTubeDownloader
+from src.downloader.youtube_downloader import download_and_merge, YouTubeDownloader
+from src.downloader.utils import fetch_resolutions
 import threading
 
 
