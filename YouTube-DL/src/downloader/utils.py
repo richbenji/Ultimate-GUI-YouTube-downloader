@@ -36,3 +36,7 @@ def merge_audio_video(video_file, audio_file, output_file):
         subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     except FileNotFoundError:
         raise RuntimeError("FFmpeg n'est pas installé ou introuvable dans le PATH.")
+
+def sanitize_filename(filename):
+    """Nettoie le titre pour en faire un nom de fichier valide."""
+    return "".join(c for c in filename if c.isalnum() or c in " .-_").rstrip()

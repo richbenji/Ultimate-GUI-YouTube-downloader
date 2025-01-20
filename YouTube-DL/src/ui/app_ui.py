@@ -1,12 +1,27 @@
+import logging
+import sys
 import customtkinter as ctk
 from PIL import Image
 from customtkinter import CTkImage
 from tkinter import filedialog
 from src.config import Config
-from src.downloader.youtube_downloader import download_and_merge, YouTubeDownloader
+from src.downloader.youtube_downloader import download_and_merge, download_from_file
 from src.downloader.utils import fetch_resolutions
 import threading
 
+
+# Configuration de logging
+LOG_LEVEL = logging.INFO  # Changez en logging.DEBUG pour des logs détaillés
+logging.basicConfig(
+    level=LOG_LEVEL,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("youtube_downloader.log"),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+logger = logging.getLogger(__name__)
 
 class YouTubeDownloaderApp(ctk.CTk):
     def __init__(self):
@@ -15,9 +30,6 @@ class YouTubeDownloaderApp(ctk.CTk):
         # Configurations de la fenêtre principale
         self.title("Ultimate GUI YouTube Downloader")
         self.geometry("600x500")
-
-        # Initialiser le downloader
-        self.downloader = YouTubeDownloader(output_dir="downloads/")
 
         # Ajouter le liseré bleu avec le logo et le titre
         self.create_top_banner()
@@ -147,21 +159,16 @@ class YouTubeDownloaderApp(ctk.CTk):
 
     def download_batch_thread(self):
         """Thread pour télécharger plusieurs vidéos depuis un fichier texte."""
-        threading.Thread(
-            target=self.start_batch_download
-        ).start()
-
-    def start_batch_download(self):
-        """Lance le téléchargement en batch."""
-        try:
-            results = self.downloader.download_from_file(
-                self.selected_file, self.selected_batch_resolution.split()[1]
+        def task():
+            results = download_from_file(
+                self.selected_file,
+                self.selected_batch_resolution,
+                self.status_label,
+                self.batch_progress_bar
             )
-            for i, result in enumerate(results):
-                self.batch_progress_bar.set((i + 1) / len(results))
-                self.status_label.configure(text=result, text_color="green" if "Téléchargé" in result else "red")
-        except Exception as e:
-            self.status_label.configure(text=f"Erreur : {e}", text_color="red")
+            self.status_label.configure(text="Téléchargement terminé.", text_color="green")
+
+        threading.Thread(target=task).start()
 
 
 # Exécuter l'application si le fichier est exécuté directement
