@@ -3,7 +3,9 @@ import sys
 import customtkinter as ctk
 from PIL import Image
 from customtkinter import CTkImage
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
+from pathlib import Path
+from pytubefix import YouTube  # Import ajouté ici
 from src.config import Config
 from src.downloader.youtube_downloader import download_and_merge, download_from_file
 from src.downloader.utils import fetch_resolutions
@@ -22,6 +24,7 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
+
 
 class YouTubeDownloaderApp(ctk.CTk):
     def __init__(self):
@@ -132,16 +135,49 @@ class YouTubeDownloaderApp(ctk.CTk):
 
     def download_thread(self):
         """Thread pour télécharger une seule vidéo."""
-        def task():
-            download_and_merge(
-                self.url_entry.get(),
-                self.resolution_menu.get(),
-                self.status_label,
-                self.progress_bar
-            )
-            self.progress_bar.set(1)  # Forcer la barre de progression à 100% à la fin
+        try:
+            # Récupérer l'URL saisie par l'utilisateur
+            url = self.url_entry.get()
 
-        threading.Thread(target=task).start()
+            # Initialiser l'objet YouTube pour récupérer le titre de la vidéo
+            yt = YouTube(url)
+            sanitized_title = "".join(c for c in yt.title if c.isalnum() or c in " .-_").rstrip()  # Nettoyer le titre
+
+            # Ouvrir la boîte de dialogue avec le titre pré-rempli
+            save_path = filedialog.asksaveasfilename(
+                initialfile=f"{sanitized_title}.mp4",  # Utiliser le titre nettoyé
+                defaultextension=".mp4",
+                filetypes=[("Fichiers MP4", "*.mp4"), ("Tous les fichiers", "*.*")]
+            )
+
+            if not save_path:
+                # L'utilisateur a annulé la boîte de dialogue
+                self.status_label.configure(text="Téléchargement annulé.", text_color="red")
+                return
+
+            # Lancer le téléchargement dans un thread
+            def task():
+                try:
+                    selected_option = self.resolution_menu.get()
+                    output_dir = str(Path(save_path).parent)
+                    custom_filename = str(Path(save_path).name)
+
+                    download_and_merge(
+                        url,
+                        selected_option,
+                        self.status_label,
+                        self.progress_bar,
+                        output_dir,
+                        custom_filename
+                    )
+                    self.progress_bar.set(1)  # Forcer la barre de progression à 100%
+                except Exception as e:
+                    self.status_label.configure(text=f"Erreur : {e}", text_color="red")
+
+            threading.Thread(target=task).start()
+
+        except Exception as e:
+            self.status_label.configure(text=f"Erreur : {e}", text_color="red")
 
     def select_file(self):
         """Ouvre une boîte de dialogue pour sélectionner un fichier texte."""
@@ -159,14 +195,24 @@ class YouTubeDownloaderApp(ctk.CTk):
 
     def download_batch_thread(self):
         """Thread pour télécharger plusieurs vidéos depuis un fichier texte."""
+        # Ouvrir une boîte de dialogue pour sélectionner un dossier
+        output_dir = filedialog.askdirectory(title="Sélectionner un dossier de destination")
+        if not output_dir:
+            messagebox.showwarning("Avertissement", "Aucun dossier sélectionné.")
+            return
+
         def task():
-            results = download_from_file(
-                self.selected_file,
-                self.selected_batch_resolution,
-                self.status_label,
-                self.batch_progress_bar
-            )
-            self.status_label.configure(text="Téléchargement terminé.", text_color="green")
+            try:
+                results = download_from_file(
+                    self.selected_file,  # Le fichier texte contenant les URLs
+                    self.selected_batch_resolution,  # La résolution sélectionnée
+                    self.status_label,  # Le label pour afficher le statut
+                    self.batch_progress_bar,  # La barre de progression
+                    output_dir  # Le dossier de destination
+                )
+                self.status_label.configure(text="Téléchargement terminé.", text_color="green")
+            except Exception as e:
+                self.status_label.configure(text=f"Erreur : {e}", text_color="red")
 
         threading.Thread(target=task).start()
 
