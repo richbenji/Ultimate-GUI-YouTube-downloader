@@ -7,7 +7,7 @@ from src.downloader.utils import show_progress, merge_audio_video, sanitize_file
 def download_and_merge(url, selected_option, status_label, progress_bar, output_dir=None, custom_filename=None):
     """Télécharge une vidéo et fusionne audio + vidéo si nécessaire."""
     try:
-        yt = YouTube(url)
+        yt = YouTube(url, use_po_token=True)
 
         # Ajouter une méthode pour suivre la progression
         total_size = yt.streams.get_highest_resolution().filesize

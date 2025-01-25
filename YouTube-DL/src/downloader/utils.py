@@ -11,7 +11,7 @@ def show_progress(stream, chunk, bytes_remaining, total_size, progress_bar):
 def fetch_resolutions(url, resolution_menu, status_label):
     """Récupère les résolutions disponibles pour une vidéo."""
     try:
-        yt = YouTube(url)
+        yt = YouTube(url, use_po_token=True)
         streams = yt.streams.filter(adaptive=True)
         options = [f"{stream.mime_type.split('/')[-1].upper()} {stream.resolution}" for stream in streams if stream.resolution]
         options = list(set(options))  # Éviter les doublons

@@ -13,6 +13,7 @@ class Config:
     # Fichiers spécifiques
     LOGO_PATH = os.path.join(ASSETS_DIR, "Youtube_logo.png")
     SVG_PATH = os.path.join(ASSETS_DIR, "YouTube_2024.svg")
+    TOKEN_FILE_PATH = os.path.join(BASE_DIR, "src", "token.json")
 
     # Polices
     FONT_METAL_MANIA = os.path.join(FONTS_DIR, "MetalMania-Regular.ttf")

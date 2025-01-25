@@ -5,15 +5,16 @@ from PIL import Image
 from customtkinter import CTkImage
 from tkinter import filedialog, messagebox
 from pathlib import Path
-from pytubefix import YouTube  # Import ajouté ici
+from pytubefix import YouTube
 from src.config import Config
 from src.downloader.youtube_downloader import download_and_merge, download_from_file
 from src.downloader.utils import fetch_resolutions
 import threading
 
+## appeler la fonction sanitize_filename dans download_thread ? ##
 
 # Configuration de logging
-LOG_LEVEL = logging.INFO  # Changez en logging.DEBUG pour des logs détaillés
+LOG_LEVEL = logging.INFO  # Changer en logging.DEBUG pour des logs détaillés
 logging.basicConfig(
     level=LOG_LEVEL,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -140,7 +141,7 @@ class YouTubeDownloaderApp(ctk.CTk):
             url = self.url_entry.get()
 
             # Initialiser l'objet YouTube pour récupérer le titre de la vidéo
-            yt = YouTube(url)
+            yt = YouTube(url, use_po_token=True)
             sanitized_title = "".join(c for c in yt.title if c.isalnum() or c in " .-_").rstrip()  # Nettoyer le titre
 
             # Ouvrir la boîte de dialogue avec le titre pré-rempli
