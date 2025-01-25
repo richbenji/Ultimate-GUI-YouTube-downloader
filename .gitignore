@@ -4,6 +4,9 @@
 # Ignorer les fichiers de configuration IDE (comme PyCharm)
 .idea/
 
+notebook.txt
+dev-notebook.md
+
 YouTube-DL/src/youtube_downloader.log
 
 YouTube-DL/src/ui/__pycache__/app_ui.cpython-312.pyc
