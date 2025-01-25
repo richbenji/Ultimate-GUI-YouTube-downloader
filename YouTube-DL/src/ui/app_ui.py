@@ -6,9 +6,9 @@ from customtkinter import CTkImage
 from tkinter import filedialog, messagebox
 from pathlib import Path
 from pytubefix import YouTube
-from src.config import Config
-from src.downloader.youtube_downloader import download_and_merge, download_from_file
-from src.downloader.utils import fetch_resolutions
+from config import Config
+from downloader.youtube_downloader import download_and_merge, download_from_file
+from downloader.utils import fetch_resolutions
 import threading
 
 ## appeler la fonction sanitize_filename dans download_thread ? ##

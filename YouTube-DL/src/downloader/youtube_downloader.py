@@ -1,6 +1,6 @@
 import os
 from pytubefix import YouTube
-from src.downloader.utils import show_progress, merge_audio_video, sanitize_filename
+from downloader.utils import show_progress, merge_audio_video, sanitize_filename
 
 
 # Fonction pour télécharger une vidéo et fusionner audio + vidéo si nécessaire
