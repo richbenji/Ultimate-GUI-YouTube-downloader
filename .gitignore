@@ -28,3 +28,7 @@ YouTube-DL/src/__pycache__/config.cpython-312.pyc
 YouTube-DL/src/downloader/__pycache__/utils.cpython-312.pyc
 
 YouTube-DL/youtube_downloader.log
+
+YouTube-DL/src/ui/youtube_downloader.log
+
+YouTube-DL/src/ui/app_ui2.py
