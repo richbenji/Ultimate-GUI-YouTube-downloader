@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 import customtkinter as ctk
 from PIL import Image
@@ -8,8 +9,8 @@ from tkinter import filedialog, messagebox
 from pathlib import Path
 from pytubefix import YouTube
 from config import Config
-from downloader.youtube_downloader import download_and_merge, download_from_file
-from downloader.utils import fetch_resolutions
+from downloader.youtube_downloader import download_and_merge, download_from_file, download_and_merge1
+from downloader.utils import fetch_resolutions, fetch_video_resolutions, fetch_audio_bitrates
 import threading
 
 # Configuration de logging
@@ -136,34 +137,38 @@ class YouTubeDownloaderApp(ctk.CTk):
         url_label.grid(row=0, column=0, sticky="w", padx=10, pady=(10, 0))
 
         # Champ d'entrée pour l'URL
-        url_entry = ctk.CTkEntry(parent_frame,
+        self.url_entry = ctk.CTkEntry(parent_frame,
                                  placeholder_text="https://www.youtube.com/watch?v=...",
                                  width=400)
-        url_entry.grid(row=1, column=0, sticky="ew", padx=10, pady=(0, 10))
+        self.url_entry.grid(row=1, column=0, sticky="ew", padx=10, pady=(0, 10))
 
-        # Bouton pour récupérer les résolutions
-        fetch_button = ctk.CTkButton(
+        # Bouton pour récupérer les options vidéo et audio
+        fetch_options_button = ctk.CTkButton(
             parent_frame,
-            text="Récupérer les Résolutions",
-            command=self.fetch_resolutions_thread
+            text="Récupérer Résolutions et Bitrates",
+            command=self.fetch_video_and_audio_options_thread
         )
-        fetch_button.grid(row=1, column=1, sticky="ew", padx=10, pady=(0, 10))
+        fetch_options_button.grid(row=1, column=1, sticky="ew", padx=10, pady=(0, 10))
 
         # Labels et dropdowns pour sélectionner les résolutions
         resolution_label = ctk.CTkLabel(parent_frame, text="Video Resolution:")
         resolution_label.grid(row=2, column=0, sticky="e", padx=(0,10), pady=(10, 5))
 
-        resolution_dropdown = ctk.CTkComboBox(parent_frame, values=["N/A"])
-        resolution_dropdown.grid(row=2, column=1, sticky="w", padx=10, pady=(10, 5))
+        self.resolution_dropdown = ctk.CTkComboBox(parent_frame, values=["N/A"])
+        self.resolution_dropdown.grid(row=2, column=1, sticky="w", padx=10, pady=(10, 5))
 
         bitrate_label = ctk.CTkLabel(parent_frame, text="Audio Bitrate:")
         bitrate_label.grid(row=3, column=0, sticky="e", padx=(0,10), pady=(5, 20))
 
-        bitrate_dropdown = ctk.CTkComboBox(parent_frame, values=["N/A"])
-        bitrate_dropdown.grid(row=3, column=1, sticky="w", padx=10, pady=(5, 20))
+        self.bitrate_dropdown = ctk.CTkComboBox(parent_frame, values=["N/A"])
+        self.bitrate_dropdown.grid(row=3, column=1, sticky="w", padx=10, pady=(5, 20))
 
-        download_button = ctk.CTkButton(parent_frame, text="Télécharger", state="disabled")
-        download_button.grid(row=4, column=0, columnspan=2, sticky="ew", padx=100, pady=(10, 20))
+        self.download_button = ctk.CTkButton(parent_frame,
+                                        text="Télécharger",
+                                        command=self.download_video_thread,
+                                        state="disabled"
+                                        )
+        self.download_button.grid(row=4, column=0, columnspan=2, sticky="ew", padx=100, pady=(10, 20))
 
     def create_batch_download_widgets(self, parent_frame):
         """Widgets pour téléchargement en batch."""
@@ -229,6 +234,85 @@ class YouTubeDownloaderApp(ctk.CTk):
 
     def set_batch_resolution(self, resolution):
         self.selected_batch_resolution = resolution
+
+    def fetch_video_and_audio_options_thread(self):
+        """Thread pour récupérer les résolutions vidéo et les bitrates audio."""
+        def task():
+            url = self.url_entry.get()
+            try:
+                # Récupérer les résolutions vidéo
+                yt = YouTube(url, use_po_token=True)
+
+                # Flux vidéo (adaptatifs, uniquement vidéo)
+                video_streams = yt.streams.filter(adaptive=True, only_video=True)
+                video_options = [stream.resolution for stream in video_streams if stream.resolution]
+                video_options = ["None"] + sorted(set(video_options))  # Trier et éviter les doublons
+
+                # Mettre à jour le menu des résolutions
+                if video_options:
+                    self.resolution_dropdown.configure(values=video_options)
+                    self.resolution_dropdown.set(video_options[-1])  # Résolution la plus élevée par défaut
+
+                # Flux audio (adaptatifs, uniquement audio)
+                audio_streams = yt.streams.filter(adaptive=True, only_audio=True)
+                audio_options = [stream.abr for stream in audio_streams if stream.abr]
+                audio_options = ["None"] + sorted(set(audio_options))  # Trier et éviter les doublons
+
+                # Mettre à jour le menu des bitrates
+                if audio_options:
+                    self.bitrate_dropdown.configure(values=audio_options)
+                    self.bitrate_dropdown.set(audio_options[-1])  # Bitrate le plus élevé par défaut
+
+                # Mettre à jour le statut
+                self.status_label.configure(text="Résolutions et bitrates récupérés.", text_color="green")
+
+            except Exception as e:
+                self.status_label.configure(text=f"Erreur : {e}", text_color="red")
+            self.download_button.configure(state="normal")
+
+        # Exécuter la tâche dans un thread séparé
+        threading.Thread(target=task).start()
+
+    def download_video_thread(self):
+        """Lance le téléchargement en arrière-plan."""
+        try:
+            # Récupérer l'URL saisie par l'utilisateur
+            url = self.url_entry.get()
+
+            # Initialiser l'objet YouTube pour récupérer le titre de la vidéo
+            yt = YouTube(url, use_po_token=True)
+            sanitized_title = "".join(c for c in yt.title if c.isalnum() or c in " .-_").rstrip()  # Nettoyer le titre
+
+            # Ouvrir la boîte de dialogue avec le titre pré-rempli
+            save_path = filedialog.asksaveasfilename(
+                initialfile=f"{sanitized_title}.mp4",  # Utiliser le titre nettoyé
+                defaultextension=".mp4",
+                filetypes=[("Fichiers MP4", "*.mp4"), ("Fichier MP3", "*.mp3"), ("Tous les fichiers", "*.*")]
+            )
+
+            if not save_path:
+                # L'utilisateur a annulé la boîte de dialogue
+                self.status_label.configure(text="Téléchargement annulé.", text_color="red")
+                return
+
+            # Extraire le dossier de destination et le nom du fichier à partir du chemin sélectionné
+            output_dir = os.path.dirname(save_path)  # Récupérer le dossier choisi
+            custom_filename = os.path.basename(save_path)  # Récupérer le nom du fichier
+
+            threading.Thread(
+                target=download_and_merge1,
+                args=(
+                    self.url_entry.get(),
+                    self.resolution_dropdown.get(),  # Résolution choisie
+                    self.bitrate_dropdown.get(),  # Bitrate choisi
+                    self.status_label,
+                    self.batch_progress_bar,
+                    output_dir,  # Utiliser le dossier sélectionné
+                    custom_filename  # Utiliser le nom de fichier sélectionné
+                )
+            ).start()
+        except Exception as e:
+            self.status_label.configure(text=f"Erreur : {e}", text_color="red")
 
 
 if __name__ == "__main__":
