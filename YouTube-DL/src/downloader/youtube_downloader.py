@@ -58,13 +58,6 @@ def download_and_merge1(url, selected_video_res, selected_audio_bitrate, status_
             status_label.configure(text="Erreur : Bitrate audio non trouvé.", text_color="red")
             return
 
-        # Définir les fichiers de sortie temporaires
-        #video_file = os.path.join(output_dir, f"{custom_filename}_video.mp4")
-        #audio_file = os.path.join(output_dir, f"{custom_filename}_audio.mp3")
-
-        # Afficher les informations
-        status_label.configure(text="Téléchargement en cours...", text_color="blue")
-
         # Télécharger la vidéo et l'audio
         video_file = f"{custom_filename}_video.mp4"
         audio_file = f"{custom_filename}_audio.mp3"

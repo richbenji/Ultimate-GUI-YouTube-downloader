@@ -3,14 +3,13 @@ import os
 import sys
 import customtkinter as ctk
 from PIL import Image
-from PIL.ImageOps import expand
 from customtkinter import CTkImage, CTkFont
 from tkinter import filedialog, messagebox
 from pathlib import Path
 from pytubefix import YouTube
 from config import Config
 from downloader.youtube_downloader import download_and_merge, download_from_file, download_and_merge1
-from downloader.utils import fetch_resolutions, fetch_video_resolutions, fetch_audio_bitrates
+from downloader.utils import fetch_resolutions
 import threading
 
 # Configuration de logging
@@ -283,10 +282,21 @@ class YouTubeDownloaderApp(ctk.CTk):
             yt = YouTube(url, use_po_token=True)
             sanitized_title = "".join(c for c in yt.title if c.isalnum() or c in " .-_").rstrip()  # Nettoyer le titre
 
+            # Déterminer l'extension selon le choix de l'utilisateur
+            selected_video_res = self.resolution_dropdown.get()
+            selected_audio_bitrate = self.bitrate_dropdown.get()
+
+            if selected_audio_bitrate == "None":
+                extension = ".mp4"  # Cas 1 : Vidéo seule
+            elif selected_video_res == "None":
+                extension = ".mp3"  # 🎵 Cas 2 : Audio seul
+            else:
+                extension = ".mp4"  # Cas 3 : Fusion Audio + Vidéo en MP4
+
             # Ouvrir la boîte de dialogue avec le titre pré-rempli
             save_path = filedialog.asksaveasfilename(
-                initialfile=f"{sanitized_title}.mp4",  # Utiliser le titre nettoyé
-                defaultextension=".mp4",
+                initialfile=f"{sanitized_title}{extension}",  # Utiliser le titre nettoyé
+                defaultextension=extension,
                 filetypes=[("Fichiers MP4", "*.mp4"), ("Fichier MP3", "*.mp3"), ("Tous les fichiers", "*.*")]
             )
 
