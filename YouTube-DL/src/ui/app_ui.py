@@ -8,7 +8,7 @@ from tkinter import filedialog, messagebox
 from pathlib import Path
 from pytubefix import YouTube
 from config import Config
-from downloader.youtube_downloader import download_and_merge, download_from_file, download_and_merge1
+from downloader.youtube_downloader import download_from_file, download_and_merge
 from downloader.utils import fetch_resolutions
 import threading
 
@@ -185,7 +185,7 @@ class YouTubeDownloaderApp(ctk.CTk):
         # Menu déroulant pour choisir la résolution
         self.batch_resolution_menu = ctk.CTkOptionMenu(
             parent_frame,
-            values=["mp4 1080p", "mp4 720p", "mp4 360p"],
+            values=["mp4 1080p", "mp4 720p", "mp4 360p", "audio only"],
             command=self.set_batch_resolution
         )
         self.batch_resolution_menu.grid(row=2, column=0, sticky="ew", padx=10, pady=(0, 10))
@@ -216,8 +216,14 @@ class YouTubeDownloaderApp(ctk.CTk):
         def task():
             try:
                 results = download_from_file(
-                    self.selected_file, self.selected_batch_resolution, self.status_label, self.batch_progress_bar, output_dir
+                    self.selected_file,
+                    self.resolution_dropdown.get(),
+                    self.bitrate_dropdown.get(),
+                    self.status_label,
+                    self.batch_progress_bar,
+                    output_dir
                 )
+
                 self.status_label.configure(text="Téléchargement terminé.", text_color="green")
             except Exception as e:
                 self.status_label.configure(text=f"Erreur : {e}", text_color="red")
@@ -310,7 +316,7 @@ class YouTubeDownloaderApp(ctk.CTk):
             custom_filename = os.path.basename(save_path)  # Récupérer le nom du fichier
 
             threading.Thread(
-                target=download_and_merge1,
+                target=download_and_merge,
                 args=(
                     self.url_entry.get(),
                     self.resolution_dropdown.get(),  # Résolution choisie
