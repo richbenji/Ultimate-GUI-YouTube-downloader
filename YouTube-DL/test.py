@@ -6,7 +6,7 @@ url = "https://www.youtube.com/watch?v=Kfr5G6HLiWQ"
 yt = YouTube(url, use_po_token=True, on_progress_callback=on_progress)
 print(yt.title)
 
-print(yt.streams.filter(only_audio=True))
+print(yt.streams.filter(only_audio=True).order_by("abr").desc())
 #video_streams = yt.streams.filter(adaptive=True, only_video=True)
 #options = [f"{stream.resolution}" for stream in video_streams if stream.resolution]
 #print(options)

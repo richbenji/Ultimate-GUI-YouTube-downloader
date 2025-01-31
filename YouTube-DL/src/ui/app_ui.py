@@ -213,22 +213,35 @@ class YouTubeDownloaderApp(ctk.CTk):
             messagebox.showwarning("Avertissement", "Aucun dossier sélectionné.")
             return
 
+        # Récupérer la résolution sélectionnée
+        selected_option = self.batch_resolution_menu.get()  # Ex: "mp4 720p", "mp4 360p", "audio only"
+
+        # Déterminer si on télécharge une vidéo ou juste de l'audio
+        if selected_option == "audio only":
+            selected_video_res = "None"
+        else:
+            selected_video_res = selected_option.split()[1]  # Récupérer "720p", "360p", etc.
+
+        selected_audio_bitrate = "best"  # Toujours prendre le meilleur bitrate audio
+
         def task():
             try:
-                results = download_from_file(
+                download_from_file(
                     self.selected_file,
-                    self.resolution_dropdown.get(),
-                    self.bitrate_dropdown.get(),
+                    selected_video_res,
+                    selected_audio_bitrate,
                     self.status_label,
                     self.batch_progress_bar,
                     output_dir
                 )
 
-                self.status_label.configure(text="Téléchargement terminé.", text_color="green")
-            except Exception as e:
-                self.status_label.configure(text=f"Erreur : {e}", text_color="red")
+                self.after(0, lambda: self.status_label.configure(text="Téléchargement terminé.", text_color="green"))
 
-        threading.Thread(target=task).start()
+            except Exception as e:
+                self.after(0, lambda: self.status_label.configure(text=f"Erreur : {e}", text_color="red"))
+
+        # Lancer `task` dans un thread
+        threading.Thread(target=task, daemon=True).start()
 
     def select_file(self):
         file_path = filedialog.askopenfilename(filetypes=[("Fichiers texte", "*.txt"), ("Tous les fichiers", "*.*")])

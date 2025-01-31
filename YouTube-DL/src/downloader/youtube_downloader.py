@@ -107,7 +107,15 @@ def download_from_file(file_path, selected_video_res, selected_audio_bitrate, st
     for i, url in enumerate(urls, start=1):
         try:
             progress_bar.set((i - 1) / total)
+
+            # Récupérer le meilleur bitrate audio
+            yt = YouTube(url, use_po_token=True)
+            best_audio = yt.streams.filter(only_audio=True).order_by("abr").desc().first()
+            selected_audio_bitrate = best_audio.abr  # Ex: "128kbps", "160kbps"
+
+            # Procéder à la fusion de l'audio et de la vidéo
             download_and_merge(url, selected_video_res, selected_audio_bitrate, status_label, progress_bar, output_dir, None)
+
             status_label.configure(text=f"Téléchargement terminé pour : {url}", text_color="green")
         except Exception as e:
             status_label.configure(text=f"Erreur avec {url} : {str(e)}", text_color="red")
