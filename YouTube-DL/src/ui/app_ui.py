@@ -1,29 +1,13 @@
-import logging
 import os
-import sys
 import customtkinter as ctk
 from PIL import Image
 from customtkinter import CTkImage, CTkFont
 from tkinter import filedialog, messagebox
-from pathlib import Path
 from pytubefix import YouTube
 from config import Config
 from downloader.youtube_downloader import download_from_file, download_and_merge
 from downloader.utils import fetch_resolutions
 import threading
-
-# Configuration de logging
-LOG_LEVEL = logging.INFO
-logging.basicConfig(
-    level=LOG_LEVEL,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler("youtube_downloader.log"),
-        logging.StreamHandler(sys.stdout)
-    ]
-)
-
-logger = logging.getLogger(__name__)
 
 
 class YouTubeDownloaderApp(ctk.CTk):
@@ -258,38 +242,14 @@ class YouTubeDownloaderApp(ctk.CTk):
         def task():
             url = self.url_entry.get()
             try:
-                # Récupérer les résolutions vidéo
-                yt = YouTube(url, use_po_token=True)
-
-                # Flux vidéo (adaptatifs, uniquement vidéo)
-                video_streams = yt.streams.filter(adaptive=True, only_video=True)
-                video_options = [stream.resolution for stream in video_streams if stream.resolution]
-                video_options = ["None"] + sorted(set(video_options))  # Trier et éviter les doublons
-
-                # Mettre à jour le menu des résolutions
-                if video_options:
-                    self.resolution_dropdown.configure(values=video_options)
-                    self.resolution_dropdown.set(video_options[-1])  # Résolution la plus élevée par défaut
-
-                # Flux audio (adaptatifs, uniquement audio)
-                audio_streams = yt.streams.filter(adaptive=True, only_audio=True)
-                audio_options = [stream.abr for stream in audio_streams if stream.abr]
-                audio_options = ["None"] + sorted(set(audio_options))  # Trier et éviter les doublons
-
-                # Mettre à jour le menu des bitrates
-                if audio_options:
-                    self.bitrate_dropdown.configure(values=audio_options)
-                    self.bitrate_dropdown.set(audio_options[-1])  # Bitrate le plus élevé par défaut
-
-                # Mettre à jour le statut
-                self.status_label.configure(text="Résolutions et bitrates récupérés.", text_color="green")
-
+                fetch_resolutions(url, self.resolution_dropdown, self.bitrate_dropdown, self.status_label)
             except Exception as e:
-                self.status_label.configure(text=f"Erreur : {e}", text_color="red")
-            self.download_button.configure(state="normal")
+                self.after(0, lambda: self.status_label.configure(text=f"Erreur : {e}", text_color="red"))
+
+            self.after(0, lambda: self.download_button.configure(state="normal"))
 
         # Exécuter la tâche dans un thread séparé
-        threading.Thread(target=task).start()
+        threading.Thread(target=task, daemon=True).start()
 
     def download_video_thread(self):
         """Lance le téléchargement en arrière-plan."""
