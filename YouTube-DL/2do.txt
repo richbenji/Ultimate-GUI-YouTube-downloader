@@ -1,42 +1,11 @@
-Améliorations possibles
+# Améliorations possibles
 
-# Interface graphique :
-
-## Améliorer l'expérience utilisateur :
-- Ajouter une barre de statut persistante en bas de la fenêtre pour afficher les messages globaux (erreurs, succès, etc.) au lieu de changer le texte d'étiquettes ponctuelles.
-- Ajouter des icônes ou animations pendant le téléchargement pour rendre l'application plus interactive.
-
-## Validation des entrées :
-- Valider l'URL saisie avant de lancer les actions (fetch_resolutions ou download).
+- Améliorer le suivi dans le statut_label lors de l'exécution des tâches (mettre dès qu'il y a un logger)
+- Vérifier à quoi sert show_progress dans utils (est-ce utilisé quelque part ?)
+- Changer la langue
+- Télécharger une playlist
 - Afficher un message d'erreur clair si l'URL n'est pas valide.
-
-# Gestion des erreurs :
-## Gestion robuste des exceptions :
-- Ajouter un fichier de log pour enregistrer les erreurs et succès des téléchargements. Cela pourrait être utile pour le débogage.
-- Implémenter un mécanisme pour gérer les erreurs de FFmpeg et indiquer précisément la cause à l'utilisateur.
-
-## Support pour les résolutions non disponibles :
-- Lorsque l'utilisateur sélectionne une résolution non disponible, proposez automatiquement la meilleure alternative.
-
-# Téléchargement :
-## Optimisation du téléchargement audio/vidéo séparé :
-- Utilisez des noms temporaires aléatoires pour les fichiers intermédiaires (video_only.mp4 et audio_only.mp3) afin d'éviter les collisions.
 - Vérifiez si FFmpeg est correctement installé et accessible avant d'essayer de fusionner les fichiers.
-
-## Personnalisation des noms de fichiers :
-- Permettez à l'utilisateur de choisir le nom du fichier téléchargé ou générez automatiquement un nom basé sur le titre de la vidéo.
-
-# Structure de projet :
-## Améliorer la réutilisabilité des fonctions :
-Isoler la logique de fetch_resolutions, download_and_merge, et merge_audio_video dans un module utilitaire distinct, afin de pouvoir les réutiliser dans différents contextes.
-
-## Création dynamique du répertoire de téléchargement :
-- Vérifiez dynamiquement que le dossier de destination existe (et créez-le au besoin).
-
-# Code qualité :
-## Docstrings et typage :
 - Ajoutez des annotations de types pour toutes les fonctions pour une meilleure lisibilité et compatibilité avec les outils de vérification comme mypy.
-
-# Tests unitaires :
 - Écrivez des tests unitaires pour les fonctions de téléchargement dans youtube_downloader.py.
 - Mockez les appels réseau avec pytubefix et vérifiez le comportement attendu.

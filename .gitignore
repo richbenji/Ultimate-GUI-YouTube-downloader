@@ -23,3 +23,5 @@ YouTube-DL/tests/liens.txt
 YouTube-DL/tests/liens2.txt
 
 YouTube-DL/src/__pycache__/logger_config.cpython-312.pyc
+
+YouTube-DL/src/ui/__pycache__/translations.cpython-312.pyc

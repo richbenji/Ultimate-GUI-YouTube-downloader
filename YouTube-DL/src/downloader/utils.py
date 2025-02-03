@@ -1,6 +1,8 @@
 from logger_config import logger
 import subprocess
 from pytubefix import YouTube
+from ui.translations import texts
+
 
 def show_progress(stream, chunk, bytes_remaining, total_size, progress_bar):
     """Met à jour la barre de progression pendant le téléchargement."""
@@ -29,29 +31,31 @@ def fetch_resolutions(url, resolution_menu, bitrate_menu, status_label):
             resolution_menu.configure(values=video_options)
             resolution_menu.set(video_options[-1])  # Sélectionne la plus haute résolution dispo
         else:
-            status_label.configure(text="Aucune résolution vidéo disponible.", text_color="red")
-            logger.warning("Aucune résolution vidéo trouvée.")
+            error_message = texts["error_no_video_available"].format(title=yt.title)
+            status_label.configure(text=error_message, text_color="red")
+            logger.warning(error_message)
 
         if audio_options:
             bitrate_menu.configure(values=audio_options)
             bitrate_menu.set(audio_options[-1])  # Sélectionne le bitrate audio le plus élevé
         else:
-            status_label.configure(text="Aucun bitrate audio disponible.", text_color="red")
-            logger.warning("Aucun bitrate audio trouvé.")
+            error_message = texts["error_no_audio_available"].format(title=yt.title)
+            status_label.configure(text=error_message, text_color="red")
+            logger.warning(error_message)
 
         # Affichage du statut
         if video_options or audio_options:
-            status_label.configure(text="Résolutions et bitrates récupérés.", text_color="green")
-            logger.info(f"Résolutions disponibles : {video_options}, Bitrates disponibles : {audio_options}")
+            status_label.configure(text=texts["fetching_resolutions"], text_color="green")
+            logger.info(f"{texts["fetching_resolutions"]}: {video_options}, {audio_options}")
 
     except Exception as e:
-        error_message = f"Erreur lors de la récupération des résolutions : {e}"
+        error_message = f"{texts['error_fetching_resolutions']} {e}"
         status_label.configure(text=error_message, text_color="red")
         logger.error(error_message)
 
 def merge_audio_video(video_file, audio_file, output_file):
     """Fusionne des fichiers audio et vidéo avec FFmpeg."""
-    logger.info(f"Fusion en cours : {video_file} + {audio_file} -> {output_file}")
+    logger.info(f"{texts['merging_files']} : {video_file} + {audio_file} -> {output_file}")
 
     try:
         command = [
@@ -61,14 +65,14 @@ def merge_audio_video(video_file, audio_file, output_file):
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
         if result.returncode == 0:
-            logger.info(f"Fusion réussie : {output_file}")
+            logger.info(f"{texts['merge_successful']} : {output_file}")
         else:
-            logger.error(f"Erreur FFmpeg : {result.stderr}")
-            raise RuntimeError("Erreur lors de la fusion avec FFmpeg.")
+            logger.error(f"{texts['error_merge_ffmpeg']} : {result.stderr}")
+            raise RuntimeError(texts['error_merge_ffmpeg'])
 
     except FileNotFoundError:
-        logger.critical("FFmpeg n'est pas installé ou introuvable.")
-        raise RuntimeError("FFmpeg n'est pas installé ou introuvable dans le PATH.")
+        logger.critical(texts['FFmpeg_not_found'])
+        raise RuntimeError(texts['FFmpeg_not_found'])
 
 
 def sanitize_filename(filename):

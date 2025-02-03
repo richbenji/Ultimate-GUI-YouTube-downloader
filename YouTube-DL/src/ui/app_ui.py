@@ -5,6 +5,7 @@ from customtkinter import CTkImage, CTkFont
 from tkinter import filedialog, messagebox
 from pytubefix import YouTube
 from config import Config
+from ui.translations import get_current_language, set_current_language, translations, texts
 from downloader.youtube_downloader import download_from_file, download_and_merge
 from downloader.utils import fetch_resolutions
 import threading
@@ -14,9 +15,17 @@ class YouTubeDownloaderApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
+        # Stocker la langue courante et son dictionnaire de traductions
+        #self.language = get_current_language()
+        #self.texts = translations[self.language]
+
         # Configurations de la fenêtre principale
-        self.title("Ultimate GUI YouTube Downloader")
-        self.geometry("900x500")  # Agrandir légèrement pour plus d'espace
+        self.title(texts["title"])  # Titre de la fenêtre
+        self.geometry("900x500")  # Taille de la fenêtre
+
+        # Couleurs de l'interface
+        ctk.set_appearance_mode("dark")
+        ctk.set_default_color_theme("blue")
 
         # Configurer la grille de la fenêtre principale
         self.grid_columnconfigure(0, weight=1)  # Colonne gauche
@@ -42,6 +51,15 @@ class YouTubeDownloaderApp(ctk.CTk):
         title_frame.columnconfigure(1, weight=1)  # Colonne centrale pour centrer le texte
         title_frame.columnconfigure(2, weight=0)  # Colonne pour le logo
 
+        # Ajouter le sélecteur de langue en haut à gauche
+        self.language_menu = ctk.CTkComboBox(
+            title_frame,
+            values=["Français", "English", "Español", "Deutsch"],
+            command=self.change_language
+        )
+        self.language_menu.grid(row=0, column=0, sticky="w", padx=10, pady=5)
+        self.language_menu.set(get_current_language())  # Langue par défaut
+
         # Charger le logo
         logo_image = Image.open(Config.LOGO_PATH)
         logo_ctk_image = CTkImage(logo_image, size=(50,50))
@@ -55,24 +73,24 @@ class YouTubeDownloaderApp(ctk.CTk):
         trade_gothic_font = ctk.CTkFont(family="TradeGothic", size=28)
 
         # Ajouter le titre
-        title_label = ctk.CTkLabel(
+        self.title_label = ctk.CTkLabel(
             title_frame,
-            text="Ultimate GUI YouTube Downloader",
+            text=texts["title"],
             text_color="white",
             font=trade_gothic_font,
             padx=10,
-            pady=10   # Plus d'espace autour du texte
+            pady=10
         )
-        title_label.grid(row=0, column=1, sticky="ew", pady=(10,0))
+        self.title_label.grid(row=0, column=1, sticky="ew", pady=(10,0))
 
         # Ajouter le sous-titre
-        subtitle_label = ctk.CTkLabel(
+        self.subtitle_label = ctk.CTkLabel(
             title_frame,
-            text="A Pytubefix GUI",
+            text=texts["subtitle"],
             text_color="white",
             font=CTkFont(size=20)
         )
-        subtitle_label.grid(row=1, column=1, sticky="ew", padx=0, pady=(10, 10))
+        self.subtitle_label.grid(row=1, column=1, sticky="ew", padx=0, pady=(10, 10))
 
     def create_status(self):
         """Créer un frame pour la barre de statut et les widgets d'URL."""
@@ -85,7 +103,9 @@ class YouTubeDownloaderApp(ctk.CTk):
         self.status_frame.grid_rowconfigure(1, weight=1)  # Deuxième ligne
 
         # Ajouter la barre de statut en haut du frame
-        self.status_label = ctk.CTkLabel(self.status_frame, text="Statut : Prêt", text_color="green")
+        self.status_label = ctk.CTkLabel(self.status_frame,
+                                         text=texts["status_ready"],
+                                         text_color="green")
         self.status_label.grid(row=0, column=0, sticky="ew", padx=10, pady=(10, 0))
 
         # Barre de progression pour téléchargement en lot
@@ -116,8 +136,8 @@ class YouTubeDownloaderApp(ctk.CTk):
         parent_frame.columnconfigure(1, weight=1)
 
         # Label pour l'URL
-        url_label = ctk.CTkLabel(parent_frame, text="Entrez l'URL de la vidéo YouTube :")
-        url_label.grid(row=0, column=0, sticky="w", padx=10, pady=(10, 0))
+        self.url_label = ctk.CTkLabel(parent_frame, text=texts["enter_url"])
+        self.url_label.grid(row=0, column=0, sticky="w", padx=10, pady=(10, 0))
 
         # Champ d'entrée pour l'URL
         self.url_entry = ctk.CTkEntry(parent_frame,
@@ -126,28 +146,28 @@ class YouTubeDownloaderApp(ctk.CTk):
         self.url_entry.grid(row=1, column=0, sticky="ew", padx=10, pady=(0, 10))
 
         # Bouton pour récupérer les options vidéo et audio
-        fetch_options_button = ctk.CTkButton(
+        self.fetch_options_button = ctk.CTkButton(
             parent_frame,
-            text="Récupérer Résolutions et Bitrates",
+            text=texts["fetching_res_bit"],
             command=self.fetch_video_and_audio_options_thread
         )
-        fetch_options_button.grid(row=1, column=1, sticky="ew", padx=10, pady=(0, 10))
+        self.fetch_options_button.grid(row=1, column=1, sticky="ew", padx=10, pady=(0, 10))
 
         # Labels et dropdowns pour sélectionner les résolutions
-        resolution_label = ctk.CTkLabel(parent_frame, text="Video Resolution:")
-        resolution_label.grid(row=2, column=0, sticky="e", padx=(0,10), pady=(10, 5))
+        self.resolution_label = ctk.CTkLabel(parent_frame, text=texts["video_resolution"])
+        self.resolution_label.grid(row=2, column=0, sticky="e", padx=(0,10), pady=(10, 5))
 
         self.resolution_dropdown = ctk.CTkComboBox(parent_frame, values=["N/A"])
         self.resolution_dropdown.grid(row=2, column=1, sticky="w", padx=10, pady=(10, 5))
 
-        bitrate_label = ctk.CTkLabel(parent_frame, text="Audio Bitrate:")
-        bitrate_label.grid(row=3, column=0, sticky="e", padx=(0,10), pady=(5, 20))
+        self.bitrate_label = ctk.CTkLabel(parent_frame, text=texts["audio_bitrate"])
+        self.bitrate_label.grid(row=3, column=0, sticky="e", padx=(0,10), pady=(5, 20))
 
         self.bitrate_dropdown = ctk.CTkComboBox(parent_frame, values=["N/A"])
         self.bitrate_dropdown.grid(row=3, column=1, sticky="w", padx=10, pady=(5, 20))
 
         self.download_button = ctk.CTkButton(parent_frame,
-                                        text="Télécharger",
+                                        text=texts["download_button"],
                                         command=self.download_video_thread,
                                         state="disabled"
                                         )
@@ -159,12 +179,15 @@ class YouTubeDownloaderApp(ctk.CTk):
         parent_frame.columnconfigure(0, weight=1)
 
         # Bouton pour sélectionner un fichier texte
-        self.file_button = ctk.CTkButton(parent_frame, text="Sélectionner un fichier texte", command=self.select_file)
+        self.file_button = ctk.CTkButton(parent_frame,
+                                         text=texts["select_file"],
+                                         command=self.select_file)
         self.file_button.grid(row=0, column=0, sticky="ew", padx=10, pady=(20, 10))
 
         # Label pour sélectionner une résolution
-        resolution_label = ctk.CTkLabel(parent_frame, text="Sélectionner une résolution :")
-        resolution_label.grid(row=1, column=0, sticky="w", padx=10, pady=(10, 0))
+        self.resolution_label = ctk.CTkLabel(parent_frame,
+                                        text=texts["select_resolution"])
+        self.resolution_label.grid(row=1, column=0, sticky="w", padx=10, pady=(10, 0))
 
         # Menu déroulant pour choisir la résolution
         self.batch_resolution_menu = ctk.CTkOptionMenu(
@@ -173,12 +196,12 @@ class YouTubeDownloaderApp(ctk.CTk):
             command=self.set_batch_resolution
         )
         self.batch_resolution_menu.grid(row=2, column=0, sticky="ew", padx=10, pady=(0, 10))
-        self.selected_batch_resolution = "mp4 720p"  # A quoi sert cette ligne ????
+        self.selected_batch_resolution = "mp4 720p"  #TODO A quoi sert cette ligne ????
 
         # Bouton pour démarrer le téléchargement en lot
         self.batch_download_button = ctk.CTkButton(
             parent_frame,
-            text="Télécharger en batch",
+            text=texts["batch_download"],
             command=self.download_batch_thread,
             state="disabled"
         )
@@ -192,9 +215,13 @@ class YouTubeDownloaderApp(ctk.CTk):
         ).start()
 
     def download_batch_thread(self):
-        output_dir = filedialog.askdirectory(title="Sélectionner un dossier de destination")
+        output_dir = filedialog.askdirectory(title=texts["select_folder"])
+
         if not output_dir:
-            messagebox.showwarning("Avertissement", "Aucun dossier sélectionné.")
+            messagebox.showwarning(
+                texts["error"],
+                texts["no_folder_selected"]
+            )
             return
 
         # Récupérer la résolution sélectionnée
@@ -219,10 +246,13 @@ class YouTubeDownloaderApp(ctk.CTk):
                     output_dir
                 )
 
-                self.after(0, lambda: self.status_label.configure(text="Téléchargement terminé.", text_color="green"))
+                # Mettre à jour le statut après téléchargement
+                self.after(0, lambda: self.status_label.configure(
+                    text=texts["download_completed"], text_color="green"))  #TODO : c'est pas doublon à youtube_downloader ?
 
             except Exception as e:
-                self.after(0, lambda: self.status_label.configure(text=f"Erreur : {e}", text_color="red"))
+                self.after(0, lambda: self.status_label.configure(
+                    text=f"{texts['error']} {e}", text_color="red"))
 
         # Lancer `task` dans un thread
         threading.Thread(target=task, daemon=True).start()
@@ -232,7 +262,8 @@ class YouTubeDownloaderApp(ctk.CTk):
         if file_path:
             self.selected_file = file_path
             self.batch_download_button.configure(state="normal")
-            self.status_label.configure(text=f"Fichier sélectionné : {file_path}", text_color="blue")
+            self.status_label.configure(text=f"{texts["selected_file"]} : {file_path}",
+                                        text_color="blue")
 
     def set_batch_resolution(self, resolution):
         self.selected_batch_resolution = resolution
@@ -244,7 +275,8 @@ class YouTubeDownloaderApp(ctk.CTk):
             try:
                 fetch_resolutions(url, self.resolution_dropdown, self.bitrate_dropdown, self.status_label)
             except Exception as e:
-                self.after(0, lambda: self.status_label.configure(text=f"Erreur : {e}", text_color="red"))
+                self.after(0, lambda: self.status_label.configure(text=f"{texts["error"]} : {e}",
+                                                                  text_color="red"))
 
             self.after(0, lambda: self.download_button.configure(state="normal"))
 
@@ -281,7 +313,8 @@ class YouTubeDownloaderApp(ctk.CTk):
 
             if not save_path:
                 # L'utilisateur a annulé la boîte de dialogue
-                self.status_label.configure(text="Téléchargement annulé.", text_color="red")
+                self.status_label.configure(text=texts["download_cancelled"],
+                                            text_color="red")
                 return
 
             # Extraire le dossier de destination et le nom du fichier à partir du chemin sélectionné
@@ -301,7 +334,32 @@ class YouTubeDownloaderApp(ctk.CTk):
                 )
             ).start()
         except Exception as e:
-            self.status_label.configure(text=f"Erreur : {e}", text_color="red")
+            self.status_label.configure(text=f"{texts["error"]} : {e}", text_color="red")
+
+    def change_language(self, selected_language):
+        """Change la langue de l'interface."""
+        set_current_language(selected_language)  # Met à jour la langue globale
+        texts = translations[selected_language]
+
+        # Mettre à jour les labels et boutons fixes
+        self.title_label.configure(text=texts["title"])
+        self.subtitle_label.configure(text=texts["subtitle"])
+        self.status_label.configure(text=texts["status_ready"], text_color="green")
+        self.fetch_options_button.configure(text=texts["fetching_res_bit"])
+       # self.log_button.configure(text=texts["open_log"])
+        self.file_button.configure(text=texts["select_file"])
+        self.batch_download_button.configure(text=texts["batch_download"])
+        self.download_button.configure(text=texts["download"])
+        self.resolution_label.configure(text=texts["video_resolution"])
+        self.bitrate_label.configure(text=texts["audio_bitrate"])
+
+        # Mettre à jour les placeholders et valeurs par défaut
+        self.url_label.configure(text=texts["enter_url"])
+        self.language_menu.set(selected_language)
+
+        # Mettre à jour les menus déroulants
+        self.resolution_dropdown.configure(values=[texts["select_resolution"]])
+        self.bitrate_dropdown.configure(values=[texts["audio_bitrate"]])
 
 
 if __name__ == "__main__":
