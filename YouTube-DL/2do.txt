@@ -1,11 +1,7 @@
 # Améliorations possibles
 
-- Améliorer le suivi dans le statut_label lors de l'exécution des tâches (mettre dès qu'il y a un logger)
 - Vérifier à quoi sert show_progress dans utils (est-ce utilisé quelque part ?)
-- Changer la langue
 - Télécharger une playlist
-- Afficher un message d'erreur clair si l'URL n'est pas valide.
-- Vérifiez si FFmpeg est correctement installé et accessible avant d'essayer de fusionner les fichiers.
 - Ajoutez des annotations de types pour toutes les fonctions pour une meilleure lisibilité et compatibilité avec les outils de vérification comme mypy.
 - Écrivez des tests unitaires pour les fonctions de téléchargement dans youtube_downloader.py.
 - Mockez les appels réseau avec pytubefix et vérifiez le comportement attendu.

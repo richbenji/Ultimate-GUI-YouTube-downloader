@@ -1,6 +1,8 @@
-from logger_config import logger
+import shutil
 import subprocess
+from logger_config import logger
 from pytubefix import YouTube
+from pytubefix.exceptions import RegexMatchError, VideoUnavailable
 from ui.translations import texts
 
 
@@ -14,7 +16,22 @@ def show_progress(stream, chunk, bytes_remaining, total_size, progress_bar):
 def fetch_resolutions(url, resolution_menu, bitrate_menu, status_label):
     """Récupère les résolutions disponibles pour une vidéo."""
     try:
-        yt = YouTube(url, use_po_token=True)
+        status_label.configure(text=texts["fetching_resolutions"], text_color="green")
+
+        try:
+            yt = YouTube(url, use_po_token=True)
+        # Détection des URL invalides
+        except RegexMatchError:
+            error_message = texts["error_invalid_url"].format(url=url)
+            status_label.configure(text=error_message, text_color="red")
+            logger.error(error_message)
+            return
+        except VideoUnavailable:
+            # Détection des vidéos supprimées / bloquées
+            error_message = texts["error_video_unavailable"].format(url=url)
+            status_label.configure(text=error_message, text_color="red")
+            logger.warning(error_message)
+            return
 
         # Récupérer les flux vidéo adaptatifs
         video_streams = yt.streams.filter(adaptive=True, only_video=True)
@@ -45,8 +62,8 @@ def fetch_resolutions(url, resolution_menu, bitrate_menu, status_label):
 
         # Affichage du statut
         if video_options or audio_options:
-            status_label.configure(text=texts["fetching_resolutions"], text_color="green")
-            logger.info(f"{texts["fetching_resolutions"]}: {video_options}, {audio_options}")
+            status_label.configure(text=texts["fetching_completed"], text_color="green")
+            logger.info(f"{texts['fetching_completed']}: {video_options}, {audio_options}")
 
     except Exception as e:
         error_message = f"{texts['error_fetching_resolutions']} {e}"
@@ -55,6 +72,12 @@ def fetch_resolutions(url, resolution_menu, bitrate_menu, status_label):
 
 def merge_audio_video(video_file, audio_file, output_file):
     """Fusionne des fichiers audio et vidéo avec FFmpeg."""
+
+    # Vérifier si FFmpeg est installé
+    if not shutil.which("ffmpeg"):
+        logger.critical(texts["FFmpeg_not_found"])
+        raise RuntimeError(texts["FFmpeg_not_found"])
+
     logger.info(f"{texts['merging_files']} : {video_file} + {audio_file} -> {output_file}")
 
     try:

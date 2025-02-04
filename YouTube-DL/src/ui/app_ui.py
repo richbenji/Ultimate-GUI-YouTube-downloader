@@ -54,7 +54,7 @@ class YouTubeDownloaderApp(ctk.CTk):
         # Ajouter le sélecteur de langue en haut à gauche
         self.language_menu = ctk.CTkComboBox(
             title_frame,
-            values=["Français", "English", "Español", "Deutsch"],
+            values=["Français", "English", "Español", "Deutsch", "Italiano"],
             command=self.change_language
         )
         self.language_menu.grid(row=0, column=0, sticky="w", padx=10, pady=5)
@@ -246,13 +246,11 @@ class YouTubeDownloaderApp(ctk.CTk):
                     output_dir
                 )
 
-                # Mettre à jour le statut après téléchargement
-                self.after(0, lambda: self.status_label.configure(
-                    text=texts["download_completed"], text_color="green"))  #TODO : c'est pas doublon à youtube_downloader ?
-
             except Exception as e:
                 self.after(0, lambda: self.status_label.configure(
-                    text=f"{texts['error']} {e}", text_color="red"))
+                    text=f"{texts['error']} {e}",
+                    text_color="red")
+                           )
 
         # Lancer `task` dans un thread
         threading.Thread(target=task, daemon=True).start()
@@ -276,7 +274,7 @@ class YouTubeDownloaderApp(ctk.CTk):
                 fetch_resolutions(url, self.resolution_dropdown, self.bitrate_dropdown, self.status_label)
             except Exception as e:
                 self.after(0, lambda: self.status_label.configure(text=f"{texts["error"]} : {e}",
-                                                                  text_color="red"))
+                                                                  text_color="red"))  #TODO : doublon de fetch_resolutions ?
 
             self.after(0, lambda: self.download_button.configure(state="normal"))
 
@@ -313,7 +311,7 @@ class YouTubeDownloaderApp(ctk.CTk):
 
             if not save_path:
                 # L'utilisateur a annulé la boîte de dialogue
-                self.status_label.configure(text=texts["download_cancelled"],
+                self.status_label.configure(text=texts["download_cancelled"],  #TODO : provoque une erreur ?...
                                             text_color="red")
                 return
 

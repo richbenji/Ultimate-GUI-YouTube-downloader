@@ -12,6 +12,9 @@ def download_and_merge(url, selected_video_res, selected_audio_bitrate, status_l
     try:
         yt = YouTube(url, use_po_token=True)
 
+        status_label.configure(text=texts["downloading_video_audio"].format(title=yt.title), text_color="blue")
+        logger.info(texts["downloading_video_audio_log"].format(title=yt.title))
+
         custom_filename = sanitize_filename(yt.title)
         final_filename = os.path.join(output_dir, f"{custom_filename}.mp4")
 
@@ -29,7 +32,7 @@ def download_and_merge(url, selected_video_res, selected_audio_bitrate, status_l
 
             status_label.configure(text=texts["downloading_video"], text_color="blue")
             video_stream.download(output_path=output_dir, filename=f"{custom_filename}.mp4")
-            status_label.configure(text=texts["video_downloaded"], text_color="green")
+            status_label.configure(text=texts["video_downloaded"].format(title=yt.title), text_color="green")
             logger.info(texts["video_downloaded_log"].format(filename=custom_filename))
             return
 
@@ -47,7 +50,7 @@ def download_and_merge(url, selected_video_res, selected_audio_bitrate, status_l
 
             status_label.configure(text=texts["downloading_audio"], text_color="blue")
             audio_stream.download(output_path=output_dir, filename=f"{custom_filename}.mp3")
-            status_label.configure(text=texts["audio_downloaded"], text_color="green")
+            status_label.configure(text=texts["audio_downloaded"].format(title=yt.title), text_color="green")
             logger.info(texts["audio_downloaded_log"].format(filename=custom_filename))
             return
 
@@ -78,8 +81,8 @@ def download_and_merge(url, selected_video_res, selected_audio_bitrate, status_l
         video_stream.download(output_path=output_dir, filename=video_file)
         audio_stream.download(output_path=output_dir, filename=audio_file)
 
-        status_label.configure(text=texts["downloading_video_audio"], text_color="blue")
-        logger.info(texts["downloading_video_audio_log"].format(title=yt.title))
+        status_label.configure(text=texts["download_video_audio_completed"], text_color="blue")
+        logger.info(texts["download_video_audio_completed_log"].format(title=yt.title))
 
         # Fusionner avec FFmpeg
         status_label.configure(text=texts["merging"], text_color="blue")
@@ -89,13 +92,17 @@ def download_and_merge(url, selected_video_res, selected_audio_bitrate, status_l
         if os.path.exists(final_filename):
             os.remove(video_file)
             os.remove(audio_file)
-            status_label.configure(text=texts["download_merge_complete"].format(filename=final_filename), text_color="green")
-            logger.info(texts["download_merge_complete_log"].format(filename=final_filename))
+            status_label.configure(text=texts["temp_files_removed"].format(filename=final_filename), text_color="green")
+            logger.info(texts["temp_files_removed_log"].format(filename=final_filename))
         else:
             error_message = texts["error_merge"].format(title=yt.title)
             status_label.configure(text=error_message, text_color="red")
             logger.error(error_message)
             return
+
+        success_message = texts["download_completed"].format(title=yt.title, url=url)
+        status_label.configure(text=success_message, text_color="green")
+        logger.info(success_message)
 
     except Exception as e:
         error_message = texts["error_generic"].format(error=str(e))
@@ -120,8 +127,14 @@ def download_from_file(file_path, selected_video_res, selected_audio_bitrate, st
         urls = [line.strip() for line in f if line.strip()]
 
     total = len(urls)
+    success_count = 0  # Compteur pour compter le nombre de téléchargements réussis
+
     for i, url in enumerate(urls, start=1):
         try:
+            progress_text = texts["progress_batch_download"].format(current=i, total=total)
+            status_label.configure(text=progress_text, text_color="blue")
+            logger.info(progress_text)
+
             progress_bar.set((i - 1) / total)
 
             yt = YouTube(url, use_po_token=True)
@@ -134,6 +147,9 @@ def download_from_file(file_path, selected_video_res, selected_audio_bitrate, st
                     status_label.configure(text=error_message, text_color="red")
                     logger.warning(error_message)
                     continue  # Passe à la vidéo suivante
+                else:
+                    status_label.configure(text=texts["video_found"].format(title=yt.title, res=selected_video_res), text_color="blue")
+                    logger.info(texts["video_found_log"].format(title=yt.title, res=selected_video_res))
 
             # Récupérer le meilleur bitrate audio
             best_audio = yt.streams.filter(only_audio=True).order_by("abr").desc().first()
@@ -148,9 +164,8 @@ def download_from_file(file_path, selected_video_res, selected_audio_bitrate, st
             # Procéder à la fusion de l'audio et de la vidéo
             download_and_merge(url, selected_video_res, selected_audio_bitrate, status_label, progress_bar, output_dir, None)
 
-            success_message = texts["download_completed"].format(title=yt.title, url=url)
-            status_label.configure(text=success_message, text_color="green")
-            logger.info(success_message)
+            # Mise à jour du compteur de succès
+            success_count += 1
 
         except Exception as e:
             error_message = texts["error_generic"].format(error=str(e))
@@ -159,5 +174,7 @@ def download_from_file(file_path, selected_video_res, selected_audio_bitrate, st
 
 
     progress_bar.set(1)
-    logger.info(texts["batch_download_complete"])
+    final_status = texts["batch_download_summary"].format(success=success_count, total=total)
+    status_label.configure(text=final_status, text_color="green")
+    logger.info(final_status)
 
