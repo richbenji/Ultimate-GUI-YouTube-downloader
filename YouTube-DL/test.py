@@ -13,8 +13,8 @@ print(yt.streams.filter(only_audio=True).order_by("abr").desc())
 
 # print(yt.streams.filter(type="audio", bitrate="", resolution="", progressive="", ))
 # Télécharge la plus haute résolution
-#ys = yt.streams.get_highest_resolution()
-#ys.download()
+ys = yt.streams.get_highest_resolution()
+ys.download()
 
 # Télécharge seulement l'audio
 #audio = yt.streams.get_audio_only()

@@ -1,7 +1,7 @@
 from logger_config import logger
 import os
 from pytubefix import YouTube
-from downloader.utils import merge_audio_video, sanitize_filename
+from downloader.utils import merge_audio_video, sanitize_filename, show_progress
 from ui.translations import texts
 
 
@@ -23,12 +23,20 @@ def download_and_merge(url, selected_video_res, selected_audio_bitrate, status_l
         ####################################################################
 
         if selected_audio_bitrate == "None":
+            # Sélectionner le flux vidéo selon la résolution choisie
             video_stream = yt.streams.filter(adaptive=True, only_video=True, resolution=selected_video_res).first()
+            # Vérifier que la vidéo est bien trouvée
             if not video_stream:
                 error_message = texts["error_no_video"].format(title=yt.title, res=selected_video_res)
                 status_label.configure(text=error_message, text_color="red")
                 logger.warning(error_message)
                 return
+
+            # Récupérer la vraie taille du fichier vidéo sélectionné
+            video_size = video_stream.filesize
+            # Lancer la mise à jour de la barre de progression
+            yt.register_on_progress_callback(lambda stream, chunk, bytes_remaining:
+                                             show_progress(stream, chunk, bytes_remaining, video_size, progress_bar))
 
             status_label.configure(text=texts["downloading_video"], text_color="blue")
             video_stream.download(output_path=output_dir, filename=f"{custom_filename}.mp4")
@@ -48,6 +56,12 @@ def download_and_merge(url, selected_video_res, selected_audio_bitrate, status_l
                 logger.warning(error_message)
                 return
 
+            # Récupérer la vraie taille du fichier vidéo sélectionné
+            audio_size = audio_stream.filesize
+            # Lancer la mise à jour de la barre de progression
+            yt.register_on_progress_callback(lambda stream, chunk, bytes_remaining:
+                                             show_progress(stream, chunk, bytes_remaining, audio_size, progress_bar))
+
             status_label.configure(text=texts["downloading_audio"], text_color="blue")
             audio_stream.download(output_path=output_dir, filename=f"{custom_filename}.mp3")
             status_label.configure(text=texts["audio_downloaded"].format(title=yt.title), text_color="green")
@@ -57,6 +71,13 @@ def download_and_merge(url, selected_video_res, selected_audio_bitrate, status_l
         ####################################################################
         # Cas 3 : Télécharger et fusionner si les deux valeurs sont valides
         ####################################################################
+
+        # Lancer la mise à jour de la barre de progression
+        yt.register_on_progress_callback(lambda stream, chunk, bytes_remaining:
+                                         progress_bar.set(
+                                             0.5 * (1 - bytes_remaining / stream.filesize)
+                                         )
+                                         )  # Arrêter à 50%
 
         # Filtrer les streams vidéo et sélectionner celui avec la bonne résolution
         video_stream = yt.streams.filter(adaptive=True, only_video=True, resolution=selected_video_res).first()
@@ -86,7 +107,11 @@ def download_and_merge(url, selected_video_res, selected_audio_bitrate, status_l
 
         # Fusionner avec FFmpeg
         status_label.configure(text=texts["merging"], text_color="blue")
-        merge_audio_video(video_file, audio_file, final_filename)
+
+        # Mise à jour de la barre de téléchargement
+        progress_bar.set(50 / 100)
+
+        merge_audio_video(video_file, audio_file, final_filename, progress_bar)
 
         # Vérifier si la fusion a bien réussi avant de supprimer les fichiers temporaires
         if os.path.exists(final_filename):

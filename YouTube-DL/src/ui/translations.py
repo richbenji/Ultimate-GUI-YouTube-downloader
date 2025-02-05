@@ -37,6 +37,7 @@ translations = {
         "no_folder_selected": "Aucun dossier sélectionné.",
 
         # --- Messages d'exécution ---
+        "download_cancelled": "Téléchargement annulé",
         "fetching_resolutions": "Récupération des résolutions et bitrates...",
         "fetching_completed": "Récupération des résolutions et bitrates terminée.",
         "downloading_video": "Téléchargement de la vidéo en cours...",
@@ -97,6 +98,7 @@ translations = {
         "no_folder_selected": "No folder selected.",
 
         # --- Execution Messages ---
+        "download_cancelled": "download cancelled",
         "fetching_resolutions": "Fetching resolutions and bitrates...",
         "fetching_completed": "Resolution and bitrate retrieval completed.",
         "downloading_video": "Downloading video...",
@@ -157,6 +159,7 @@ translations = {
         "no_folder_selected": "No se ha seleccionado ninguna carpeta.",
 
         # --- Mensajes de ejecución ---
+        "download_cancelled": "descarga cancelada",
         "fetching_resolutions": "Recuperando resoluciones y tasas de bits...",
         "fetching_completed": "Recuperación de resoluciones y tasas de bits completada.",
         "downloading_video": "Descargando video...",
@@ -217,6 +220,7 @@ translations = {
         "no_folder_selected": "Kein Ordner ausgewählt.",
 
         # --- Ausführungsnachrichten ---
+        "download_cancelled": "abgebrochener Download",
         "fetching_resolutions": "Abrufen von Auflösungen und Bitraten...",
         "fetching_completed": "Abruf von Auflösungen und Bitraten abgeschlossen.",
         "downloading_video": "Video wird heruntergeladen...",
@@ -277,6 +281,7 @@ translations = {
         "no_folder_selected": "Nessuna cartella selezionata.",
 
         # --- Messaggi di esecuzione ---
+        "download_cancelled": "scaricamento annullato",
         "fetching_resolutions": "Recupero di risoluzioni e bitrate in corso...",
         "fetching_completed": "Recupero di risoluzioni e bitrate completato.",
         "downloading_video": "Download del video in corso...",

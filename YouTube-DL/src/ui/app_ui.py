@@ -7,7 +7,7 @@ from pytubefix import YouTube
 from config import Config
 from ui.translations import get_current_language, set_current_language, translations, texts
 from downloader.youtube_downloader import download_from_file, download_and_merge
-from downloader.utils import fetch_resolutions
+from downloader.utils import fetch_resolutions, sanitize_filename
 import threading
 
 
@@ -196,7 +196,7 @@ class YouTubeDownloaderApp(ctk.CTk):
             command=self.set_batch_resolution
         )
         self.batch_resolution_menu.grid(row=2, column=0, sticky="ew", padx=10, pady=(0, 10))
-        self.selected_batch_resolution = "mp4 720p"  #TODO A quoi sert cette ligne ????
+        self.selected_batch_resolution = "mp4 720p"  #TODO Comment ça marche ????
 
         # Bouton pour démarrer le téléchargement en lot
         self.batch_download_button = ctk.CTkButton(
@@ -209,12 +209,18 @@ class YouTubeDownloaderApp(ctk.CTk):
 
     def fetch_resolutions_thread(self):
         """Thread pour récupérer les résolutions d'une vidéo unique."""
+        print("fetch_resolutions_thread: Début")  # Ajoute ce print pour voir si la fonction est appelée
+
         threading.Thread(
             target=fetch_resolutions,
-            args=(self.url_entry.get(), self.batch_resolution_menu, self.status_label),
+            args=(self.url_entry.get(), self.batch_resolution_menu, self.status_label, self.batch_progress_bar),
         ).start()
 
     def download_batch_thread(self):
+
+        # Remettre la barre de progression à zéro avant de commencer
+        self.batch_progress_bar.set(0)
+
         output_dir = filedialog.askdirectory(title=texts["select_folder"])
 
         if not output_dir:
@@ -263,20 +269,27 @@ class YouTubeDownloaderApp(ctk.CTk):
             self.status_label.configure(text=f"{texts["selected_file"]} : {file_path}",
                                         text_color="blue")
 
-    def set_batch_resolution(self, resolution):
+        # Remettre la barre de progression à zéro avant de commencer
+        self.batch_progress_bar.set(0)
+
+    def set_batch_resolution(self, resolution):  ### TODO : A QUOI SERT CETTE FONCTION ?
         self.selected_batch_resolution = resolution
 
     def fetch_video_and_audio_options_thread(self):
         """Thread pour récupérer les résolutions vidéo et les bitrates audio."""
+
+        # Remettre la barre de progression à zéro avant de commencer
+        self.batch_progress_bar.set(0)
+
         def task():
             url = self.url_entry.get()
             try:
-                fetch_resolutions(url, self.resolution_dropdown, self.bitrate_dropdown, self.status_label)
+                fetch_resolutions(url, self.resolution_dropdown, self.bitrate_dropdown, self.status_label, self.batch_progress_bar)
             except Exception as e:
-                self.after(0, lambda: self.status_label.configure(text=f"{texts["error"]} : {e}",
-                                                                  text_color="red"))  #TODO : doublon de fetch_resolutions ?
+                error_message = f"{texts['error']} : {e}"  # Capture l'erreur ici
+                self.after(0, lambda: self.status_label.configure(text=error_message, text_color="red"))
 
-            self.after(0, lambda: self.download_button.configure(state="normal"))
+        self.after(0, lambda: self.download_button.configure(state="normal"))
 
         # Exécuter la tâche dans un thread séparé
         threading.Thread(target=task, daemon=True).start()
@@ -284,12 +297,15 @@ class YouTubeDownloaderApp(ctk.CTk):
     def download_video_thread(self):
         """Lance le téléchargement en arrière-plan."""
         try:
+            # Remettre la barre de progression à zéro avant de commencer
+            self.batch_progress_bar.set(0)
+
             # Récupérer l'URL saisie par l'utilisateur
             url = self.url_entry.get()
 
             # Initialiser l'objet YouTube pour récupérer le titre de la vidéo
             yt = YouTube(url, use_po_token=True)
-            sanitized_title = "".join(c for c in yt.title if c.isalnum() or c in " .-_").rstrip()  # Nettoyer le titre
+            sanitized_title = sanitize_filename(yt.title)   # Nettoyer le titre
 
             # Déterminer l'extension selon le choix de l'utilisateur
             selected_video_res = self.resolution_dropdown.get()
@@ -298,7 +314,7 @@ class YouTubeDownloaderApp(ctk.CTk):
             if selected_audio_bitrate == "None":
                 extension = ".mp4"  # Cas 1 : Vidéo seule
             elif selected_video_res == "None":
-                extension = ".mp3"  # 🎵 Cas 2 : Audio seul
+                extension = ".mp3"  # Cas 2 : Audio seul
             else:
                 extension = ".mp4"  # Cas 3 : Fusion Audio + Vidéo en MP4
 
@@ -311,7 +327,7 @@ class YouTubeDownloaderApp(ctk.CTk):
 
             if not save_path:
                 # L'utilisateur a annulé la boîte de dialogue
-                self.status_label.configure(text=texts["download_cancelled"],  #TODO : provoque une erreur ?...
+                self.status_label.configure(text=texts["download_cancelled"],
                                             text_color="red")
                 return
 
@@ -332,7 +348,7 @@ class YouTubeDownloaderApp(ctk.CTk):
                 )
             ).start()
         except Exception as e:
-            self.status_label.configure(text=f"{texts["error"]} : {e}", text_color="red")
+            self.status_label.configure(text=f"{texts['error']} : {e}", text_color="red")
 
     def change_language(self, selected_language):
         """Change la langue de l'interface."""
