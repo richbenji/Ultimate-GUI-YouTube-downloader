@@ -8,20 +8,23 @@ notebook.txt
 dev-notebook.md
 
 YouTube-DL/src/youtube_downloader.log
-YouTube-DL/src/ui/__pycache__/app_ui.cpython-312.pyc
 YouTube-DL/src/token.json
-YouTube-DL/src/Super Mario Odyssey - Steam Gardens cover with TABS.mp4
-YouTube-DL/src/Super Mario Odyssey - Jump Up Super Star Musical Trailer.mp4
-YouTube-DL/src/Super Mario Odyssey - Jump Up Super Star cover with TABS.mp4
+YouTube-DL/src/__pycache__/logger_config.cpython-312.pyc
 YouTube-DL/src/potoken.txt
 YouTube-DL/src/downloader/__pycache__/youtube_downloader.cpython-312.pyc
+YouTube-DL/src/__pycache__/logger_config.cpython-312.pyc
+YouTube-DL/src/ui/__pycache__/app_ui.cpython-312.pyc
+YouTube-DL/src/ui/__pycache__/translations.cpython-312.pyc
 YouTube-DL/src/__pycache__/config.cpython-312.pyc
 YouTube-DL/src/downloader/__pycache__/utils.cpython-312.pyc
 YouTube-DL/youtube_downloader.log
 YouTube-DL/src/ui/youtube_downloader.log
 YouTube-DL/tests/liens.txt
 YouTube-DL/tests/liens2.txt
+YouTube-DL/test.py
+YouTube-DL/test1.py
+YouTube-DL/test2.py
 
-YouTube-DL/src/__pycache__/logger_config.cpython-312.pyc
+backup/
 
-YouTube-DL/src/ui/__pycache__/translations.cpython-312.pyc
+

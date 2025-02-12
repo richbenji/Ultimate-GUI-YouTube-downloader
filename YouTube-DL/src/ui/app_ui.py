@@ -4,11 +4,13 @@ from PIL import Image
 from customtkinter import CTkImage, CTkFont
 from tkinter import filedialog, messagebox
 from pytubefix import YouTube
+from pytubefix.cli import on_progress
 from config import Config
 from ui.translations import get_current_language, set_current_language, translations, texts
 from downloader.youtube_downloader import download_from_file, download_and_merge
 from downloader.utils import fetch_resolutions, sanitize_filename
 import threading
+
 
 
 class YouTubeDownloaderApp(ctk.CTk):
@@ -304,7 +306,7 @@ class YouTubeDownloaderApp(ctk.CTk):
             url = self.url_entry.get()
 
             # Initialiser l'objet YouTube pour récupérer le titre de la vidéo
-            yt = YouTube(url, use_po_token=True)
+            yt = YouTube(url, on_progress_callback=on_progress)
             sanitized_title = sanitize_filename(yt.title)   # Nettoyer le titre
 
             # Déterminer l'extension selon le choix de l'utilisateur

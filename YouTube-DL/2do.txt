@@ -1,5 +1,6 @@
 # Améliorations possibles
 
+- Revoir le format du logo qui semble un peu compressé
 - Télécharger une playlist
 - Ajoutez des annotations de types pour toutes les fonctions pour une meilleure lisibilité et compatibilité avec les outils de vérification comme mypy.
 - Écrivez des tests unitaires pour les fonctions de téléchargement dans youtube_downloader.py.

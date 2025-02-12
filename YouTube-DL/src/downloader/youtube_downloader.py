@@ -1,8 +1,10 @@
 from logger_config import logger
 import os
 from pytubefix import YouTube
+from pytubefix.cli import on_progress
 from downloader.utils import merge_audio_video, sanitize_filename, show_progress
 from ui.translations import texts
+
 
 
 # Fonction pour télécharger une vidéo et fusionner audio + vidéo si nécessaire
@@ -10,7 +12,7 @@ def download_and_merge(url, selected_video_res, selected_audio_bitrate, status_l
                        custom_filename=None):
     """Télécharge une vidéo ou un fichier audio, ou les deux, selon les choix."""
     try:
-        yt = YouTube(url, use_po_token=True)
+        yt = YouTube(url, on_progress_callback=on_progress)
 
         status_label.configure(text=texts["downloading_video_audio"].format(title=yt.title), text_color="blue")
         logger.info(texts["downloading_video_audio_log"].format(title=yt.title))
@@ -162,7 +164,7 @@ def download_from_file(file_path, selected_video_res, selected_audio_bitrate, st
 
             progress_bar.set((i - 1) / total)
 
-            yt = YouTube(url, use_po_token=True)
+            yt = YouTube(url, on_progress_callback=on_progress)
 
             # Vérifier si la vidéo est dispo en résolution demandée
             if selected_video_res != "None":

@@ -3,6 +3,7 @@ import time
 import subprocess
 from logger_config import logger
 from pytubefix import YouTube
+from pytubefix.cli import on_progress
 from pytubefix.exceptions import RegexMatchError, VideoUnavailable
 from ui.translations import texts
 
@@ -25,7 +26,7 @@ def fetch_resolutions(url, resolution_menu, bitrate_menu, status_label, progress
         progress_bar.set(0.1)  # Début du processus
 
         try:
-            yt = YouTube(url, use_po_token=True)
+            yt = YouTube(url, on_progress_callback=on_progress)
         # Détection des URL invalides
         except RegexMatchError:
             error_message = texts["error_invalid_url"].format(url=url)
